@@ -13,7 +13,6 @@ setup() {
     NPROC=$(nproc --ignore=1)
     BUILD_DIR="${SCRIPTDIR}/build"
     SRC_DIR="${SCRIPTDIR}/src"
-    # OUTPUT_DIR="${SCRIPTDIR}/bin"
     BUILD_TYPE="${build_type_map[release]}"
     BUILD_TYPE_SET=0
     BUILD_DEFINES=""
@@ -27,12 +26,6 @@ setup_build_dir() {
     BUILD_DIR="$2"
     return 1
 }
-
-# validate_output_dir() {
-#     OUTPUT_DIR="$2"
-#     mkdir -p "$OUTPUT_DIR"
-#     return 1
-# }
 
 # $1 = path to directory clean
 setup_clean() {
@@ -119,10 +112,6 @@ parse_cli_opts() {
                 NPROC="$1"
                 shift 1
                 ;;
-            # -o | --output-dir )
-            #     validate_output_dir "$2"
-            #     shift "$?"
-            #     ;;
             -b | --build-dir )
                 setup_build_dir "$2"
                 shift "$?"
