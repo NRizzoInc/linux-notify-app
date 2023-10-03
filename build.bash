@@ -64,6 +64,11 @@ validate_build_type() {
     return 1
 }
 
+find_built_target() {
+    # take executable with longer path (ie the actual exe and not just the path)
+    find "$BUILD_DIR/bin" -executable | sort -r | head -n 1
+}
+
 run_cmake() {
     mkdir -p "$BUILD_DIR"
     cd -- "${BUILD_DIR}" || exit
@@ -73,6 +78,8 @@ run_cmake() {
         --parallel "$NPROC" \
         --target all \
         -- "$VERBOSE_FLAG"
+
+    echo "Built target: $(find_built_target)"
 }
 
 print_usage() {
@@ -80,7 +87,7 @@ cat << EOF
 =========================================================================================================================
 Usage: $SCRIPTNAME (aka $SCRIPTPATH)
 =========================================================================================================================
-Helper utility to setup everything to use this repo
+Helper utility to build everything in this repo
 =========================================================================================================================
 How to use:
 To Start: $SCRIPTNAME [flags]
