@@ -16,7 +16,9 @@ int main() {
     if (!notify_notification_show(n, 0))
     {
         std::cerr << "show has failed" << std::endl;
+        notify_uninit();
         return -1;
     }
+    notify_uninit();
     return EXIT_SUCCESS;
 }
