@@ -27,5 +27,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # ============================================ Build individual subdirs ============================================
-add_subdirectory(version)
 add_subdirectory(main)
+add_subdirectory(notification)
+add_subdirectory(version)
