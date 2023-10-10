@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 project(notify-app
-    VERSION 1.0.0
+    VERSION 0.0.1
     DESCRIPTION "Project that uses the linux notify-send api"
 )
 

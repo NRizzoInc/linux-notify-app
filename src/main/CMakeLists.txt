@@ -17,7 +17,7 @@ target_include_directories(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-    notification-manager
+    notification
 )
 
 finalize_binary(${PROJECT_NAME})

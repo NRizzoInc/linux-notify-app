@@ -1,13 +1,18 @@
-project(notification-manager)
+project(notification)
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 find_package(LibNotify REQUIRED)
+find_package(Threads REQUIRED)
 
 SET(SOURCES
-    notification_manager.cpp
+    NotificationManager.cpp
+    NotificationAdapter.cpp
 )
 
 SET(INCLUDES
-    public/notification_manager.h
+    public/NotificationManager.h
+    public/NotificationAdapter.h
 )
 
 add_library(${PROJECT_NAME}
@@ -16,10 +21,13 @@ add_library(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC public
-    PRIVATE ${LIBNOTIFY_INCLUDE_DIRS}
+    PUBLIC ${LIBNOTIFY_INCLUDE_DIRS}
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE
-    ${LIBNOTIFY_LIBRARIES}
-)
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        ${LIBNOTIFY_LIBRARIES}
+        PRIVATE Threads::Threads
+    )
+endif()
 
