@@ -4,24 +4,16 @@
 
 namespace notification {
 
+static constexpr std::chrono::nanoseconds context_timeout = std::chrono::nanoseconds(1000000000U);
+
 std::unique_ptr<NotificationManager> NotificationManager::s_instance = nullptr;
 
-NotificationManager::NotificationManager()
-    : m_stop(false), m_recv_notif_thread([this]() { workerLoop(); })
+NotificationManager::NotificationManager() : os::Thread()
 {
-    notify_init("Notification App");
+    spawn();
 }
 
-NotificationManager::~NotificationManager()
-{
-    m_new_notif_cv.notify_all();
-    m_stop = true;
-    if (m_recv_notif_thread.joinable())
-    {
-        m_recv_notif_thread.join();
-    }
-    notify_uninit();
-}
+NotificationManager::~NotificationManager() {}
 
 
 NotificationManager & NotificationManager::getInstance()
@@ -37,47 +29,55 @@ NotificationManager & NotificationManager::getInstance()
     return *s_instance;
 }
 
-void NotificationManager::addNotification(std::string summary_text, std::chrono::milliseconds timeout_ms)
+void NotificationManager::initInThreadContext()
 {
-    std::scoped_lock lk(m_notif_mutex);
-    m_notifs[summary_text] = std::make_unique<NotificationAdapter>(summary_text);
-    m_notifs.at(summary_text)->set_timeout(timeout_ms);
-    m_new_notif_cv.notify_all();
+    std::cout << "init\n";
+    notify_init("Notification App");
 }
 
-void NotificationManager::workerLoop()
+void NotificationManager::cleanupInThreadContext()
 {
-    while (!m_stop || m_notifs.size() > 0)
-    {
-        waitForNotif();
-    }
-
+    notify_uninit();
 }
 
-void NotificationManager::waitForNotif()
+bool NotificationManager::readyToStopMainLoop()
 {
-    std::unique_lock lk(m_notif_mutex);
-    const bool is_done_waiting = m_new_notif_cv.wait_for(
-        lk,
-        std::chrono::milliseconds(500),
-        [this] {
-            return m_stop.load();
-        }
+    std::cout << "size = " << m_notifs.size() << " && " << !isThreadRunning() << "\n";
+    return m_notifs.size() < 1 && !isThreadRunning();
+}
+
+void NotificationManager::workerTask()
+{
+    runInLockedContext(
+        [this]() { 
+            std::cout << "child worker task\n";
+            for (auto & [summary, notification] : m_notifs)
+            {
+                notification->show();
+                std::cout << "Size before: " << m_notifs.size() << "\n";
+                m_notifs.erase(summary);
+                std::cout << "Size after: " << m_notifs.size() << "\n";
+            }
+        },
+        std::chrono::milliseconds(1000)
     );
-
-    if (is_done_waiting)
-    {
-        handleNotif();
-    }
 }
 
-void NotificationManager::handleNotif()
+void NotificationManager::addNotification(std::string summary_text, std::chrono::nanoseconds timeout)
 {
-    for (auto & [summary, notification] : m_notifs)
-    {
-        notification->show();
-        m_notifs.erase(summary);
-    }
+    std::cout << "adding notif \n";
+    // const auto fn =
+    //     [this, summary_text, timeout]() {
+    //     };
+    // std::cout << "added notif to list\n";
+    // runInLockedContext(fn, context_timeout);
+    std::unique_lock<std::mutex> lk = lockOnResource();
+    m_notifs[summary_text] = std::make_unique<NotificationAdapter>(summary_text);
+    m_notifs.at(summary_text)
+            ->set_timeout(std::chrono::duration_cast<std::chrono::milliseconds>(timeout));
+    lk.unlock();
+    notifyResourceChange();
+    std::cout << "done adding\n";
 }
 
 } // end of notification namespace

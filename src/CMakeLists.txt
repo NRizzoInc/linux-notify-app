@@ -33,3 +33,4 @@ get_build_metadata("${ADDITIONAL_CMAKE_BUILD_DATA}")
 # ============================================ Build individual subdirs ============================================
 add_subdirectory(main)
 add_subdirectory(notification)
+add_subdirectory(os_adapter)
